@@ -1,14 +1,15 @@
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
-import React, { useRef, useState } from 'react'
-import ScreenWrapper from '../components/ScreenWrapper'
-import Icon from '../assets/icons' // vì Icon đc viết trong index.jsx nên có thể import như vậy
-import { theme } from '../constants/theme'
-import { StatusBar } from 'expo-status-bar'
-import BackButton from '../components/BackButton'
 import { useRouter } from 'expo-router'
-import { hp, wp } from '../helpers/common'
-import Input from '../components/Input'
+import { StatusBar } from 'expo-status-bar'
+import { useRef, useState } from 'react'
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
+import Icon from '../assets/icons'; // vì Icon đc viết trong index.jsx nên có thể import như vậy
+import BackButton from '../components/BackButton'
 import Button from '../components/Button'
+import Input from '../components/Input'
+import ScreenWrapper from '../components/ScreenWrapper'
+import { theme } from '../constants/theme'
+import { hp, wp } from '../helpers/common'
+import { supabase } from '../lib/supabase'; // import supabase client
 const SignUp = () => {
     const router = useRouter();
     const emailRef = useRef('');
@@ -16,13 +17,30 @@ const SignUp = () => {
     const nameRef = useRef('');
     const [loading, setLoading] = useState(false);
 
-    const onsubmit = () => {
+    const onSubmit = async () => {
         // check if email and password are filled
-        if (!emailRef.current || !passwordRef.current) {
+        const name = nameRef.current.trim();
+        const email = emailRef.current.trim();
+        const password = passwordRef.current.trim();
+        if (!name || !email || !password) {
             Alert.alert('Sign Up', 'Please fill all fields');
             return;
         }
-
+        setLoading(true);
+        const { data: { session }, error } = await supabase.auth.signUp({
+            email, password,
+            options: {
+                data: {
+                    name
+                }
+            }
+        })
+        setLoading(false);
+        console.log('session', session);
+        console.log('error', error);
+        if (error) {
+            Alert.alert('Sign Up', error.message);
+        }
     }
     return (
         <ScreenWrapper>
@@ -41,15 +59,15 @@ const SignUp = () => {
                     <Text style={{ fontSize: hp(1.5), color: theme.colors.text }}>
                         Please enter your details to continue
                     </Text>
-                      <Input icon={<Icon name='user' size={26} strokeWidth={1.6} />}
-                        placeholder='Enter your name' onchangeText={value => { nameRef.current = value }} />
+                    <Input icon={<Icon name='user' size={26} strokeWidth={1.6} />}
+                        placeholder='Enter your name' onChangeText={value => { nameRef.current = value }} />
                     <Input icon={<Icon name='mail' size={26} strokeWidth={1.6} />}
-                        placeholder='Enter your email' onchangeText={value => { emailRef.current = value }} />
+                        placeholder='Enter your email' onChangeText={value => { emailRef.current = value }} />
                     <Input icon={<Icon name='lock' size={26} strokeWidth={1.6} />}
-                        placeholder='Enter your password' onchangeText={value => { passwordRef.current = value }}
+                        placeholder='Enter your password' onChangeText={value => { passwordRef.current = value }}
                         secureTextEntry />
                     {/* button  */}
-                    <Button title={'Sign up'} loading={loading} onPress={onsubmit} />
+                    <Button title={'Sign up'} loading={loading} onPress={onSubmit} />
                 </View>
 
                 {/* footer  */}
