@@ -1,0 +1,3 @@
+
+export const supabaseUrl = 'https://hsdwrjvcspomylrlutri.supabase.co'
+export const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzZHdyanZjc3BvbXlscmx1dHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NzQ4NjgsImV4cCI6MjA2NzQ1MDg2OH0.TjQuEx3fL1fcwd5IxEJXAoANiuontye7ZKFE3v9KvWk'
