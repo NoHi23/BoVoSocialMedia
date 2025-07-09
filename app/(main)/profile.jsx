@@ -1,11 +1,5 @@
 import { useRouter } from "expo-router";
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Icon from "../../assets/icons";
 import Avatar from "../../components/Avatar";
 import Header from "../../components/Header";
@@ -14,7 +8,8 @@ import { theme } from "../../constants/theme";
 import { useAuth } from "../../contexts/AuthContext";
 import { hp, wp } from "../../helpers/common";
 import { supabase } from "../../lib/supabase";
-const Profile = () => {
+
+  const Profile = () => { 
   const { user, setAuth } = useAuth();
   const router = useRouter();
 
@@ -25,6 +20,7 @@ const Profile = () => {
       Alert.alert("Logout", error.message);
     }
   };
+
   const handleLogout = async () => {
     //
     Alert.alert("Confirm", "Are you sure you want to logout?", [
@@ -74,27 +70,26 @@ const UserHeader = ({ user, router, handleLogout }) => {
           </View>
           {/* user name and address */}
           <View style={{ alignItems: "center", gap: 4 }}>
-            {/* <Text style={styles.userName}>{user && user.name}</Text> */}
-            {/* <Text style={styles.infoText}>{user && user.address}</Text>
-            <Text style={styles.userName}>{user && user.name}</Text> */}
+            <Text style={styles.userName}>{user && user.name}</Text>
+            <Text style={styles.infoText}>{user && user.address}</Text>
           </View>
           <View style={{ gap: 10 }}>
             {/** Email */}
             <View style={styles.info}>
               <Icon color={theme.colors.textLight} name={"mail"} size={20} />
-              {/* <Text style={styles.infoText}>{user && user.email}</Text> */}
+              <Text style={styles.infoText}>{user && user.email}</Text>
             </View>
-            * Phone
-            {/* {user && user.phoneNumber && (
+            {/* Phone */}
+            {user && user.phoneNumber && (
               <View style={styles.info}>
                 <Icon color={theme.colors.textLight} name={"call"} size={20} />
                 <Text style={styles.infoText}>{user.phoneNumber}</Text>
               </View>
-            )} */}
+            )}
             {/** Bio */}
-            {/* {user && user.bio && (
+            {user && user.bio && (
               <Text style={styles.infoText}>{user.bio}</Text>
-            )} */}
+            )}
           </View>
         </View>
       </View>

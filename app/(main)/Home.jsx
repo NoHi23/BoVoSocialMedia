@@ -9,7 +9,7 @@ import { hp, wp } from "../../helpers/common";
 const Home = () => {
   const { setAuth, user } = useAuth();
   const router = useRouter();
-  console.log("user", user);
+  console.log('user: ', user);
 
   // const onLogout = async () => {
   //   setAuth(null);
