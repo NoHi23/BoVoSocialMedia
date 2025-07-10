@@ -8,8 +8,9 @@ export const AuthProvider = ({ children }) => {
   const setAuth = (authUser) => {
     setUser(authUser); // Nhận một authUser (ví dụ: object thông tin user từ Supabase) và gán trực tiếp vào user.
   };
+
   const setUserData = (userData) => {
-    console.log("old user", user);
+    //console.log('old user: ', user);
     setUser({ ...userData }); // Dùng để cập nhật user bằng một object mới (có thể lấy từ DB, ví dụ: name, avatar,...).
   };
 
