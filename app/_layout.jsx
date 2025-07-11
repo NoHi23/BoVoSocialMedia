@@ -3,6 +3,12 @@ import { useEffect } from "react";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { getUserData } from "../services/userService";
+import { LogBox } from "react-native";
+
+LogBox.ignoreLogs(['Warning: TNodeChildrenRenderer',
+  'Warning: MemoizedTNodeRenderer',
+  'Warning: TRendererEngineProvider'
+])
 
 // Nếu trong folder có _layout.js, nó luôn được render và bọc tất cả các route con
 const _layout = () => {

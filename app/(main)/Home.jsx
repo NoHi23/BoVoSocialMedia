@@ -1,15 +1,51 @@
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import Icon from "../../assets/icons/index";
 import Avatar from "../../components/Avatar";
+import Loading from "../../components/Loading";
+import PostCard from "../../components/PostCard";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { theme } from "../../constants/theme";
 import { useAuth } from "../../contexts/AuthContext";
 import { hp, wp } from "../../helpers/common";
+import { supabase } from "../../lib/supabase";
+import { fetchPosts } from "../../services/postService";
+import { getUserData } from "../../services/userService";
+
+var limit = 0; // global variable to store the limit for posts
 const Home = () => {
   const { setAuth, user } = useAuth();
   const router = useRouter();
   console.log('user: ', user);
+
+  const handlePostEvent = async (payload) => {
+    if (payload.eventType == 'INSERT' && payload?.new?.id) {
+      let newPost = { ...payload.new };
+      let res = await getUserData(newPost?.userId);
+      newPost.user = res.success ? res.data : {};
+      setPosts(prevPosts => [newPost, ...prevPosts]);
+    }
+  }
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    let postChannel = supabase.channel('posts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, handlePostEvent).subscribe();
+    getPosts();
+
+    return () => {
+      supabase.removeChannel(postChannel);
+    }
+  }, []);
+
+  const getPosts = async () => {
+    limit = limit + 10;
+    let res = await fetchPosts(limit);
+    if (res.success) {
+      setPosts(res.data);
+    }
+  }
 
   // const onLogout = async () => {
   //   setAuth(null);
@@ -51,6 +87,22 @@ const Home = () => {
             </Pressable>
           </View>
         </View>
+        {/* Posts List */}
+        <FlatList
+          data={posts}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listStyle}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <PostCard item={item} currentUser={user} route={router} />
+          )}
+          ListFooterComponent={(
+            <View style={{ marginVertical: posts.length ? 200 : 30 }}>
+              <Loading />
+            </View>
+          )}
+        />
+
       </View>
 
       {/* <Button title="Logout" onPress={onLogout} /> */}
