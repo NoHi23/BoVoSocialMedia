@@ -17,35 +17,43 @@ var limit = 0; // global variable to store the limit for posts
 const Home = () => {
   const { setAuth, user } = useAuth();
   const router = useRouter();
-  console.log('user: ', user);
-
+  const [hasMore, setHasMore] = useState(true);
   const handlePostEvent = async (payload) => {
-    if (payload.eventType == 'INSERT' && payload?.new?.id) {
+    if (payload.eventType == "INSERT" && payload?.new?.id) {
       let newPost = { ...payload.new };
       let res = await getUserData(newPost?.userId);
       newPost.user = res.success ? res.data : {};
-      setPosts(prevPosts => [newPost, ...prevPosts]);
+      setPosts((prevPosts) => [newPost, ...prevPosts]);
     }
-  }
+  };
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    let postChannel = supabase.channel('posts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, handlePostEvent).subscribe();
-    getPosts();
+    let postChannel = supabase
+      .channel("posts")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "posts" },
+        handlePostEvent
+      )
+      .subscribe();
+    // getPosts();
 
     return () => {
       supabase.removeChannel(postChannel);
-    }
+    };
   }, []);
 
   const getPosts = async () => {
-    limit = limit + 10;
+    if (!hasMore) return null;
+    limit = limit + 3;
+    console.log("fetching post: ", limit);
     let res = await fetchPosts(limit);
     if (res.success) {
+      if ((posts.length = res.data.length)) setHasMore(false);
       setPosts(res.data);
     }
-  }
+  };
 
   // const onLogout = async () => {
   //   setAuth(null);
@@ -96,13 +104,23 @@ const Home = () => {
           renderItem={({ item }) => (
             <PostCard item={item} currentUser={user} route={router} />
           )}
-          ListFooterComponent={(
-            <View style={{ marginVertical: posts.length ? 200 : 30 }}>
-              <Loading />
-            </View>
-          )}
+          onEndReached={() => {
+            console.log("Go to the end");
+            getPosts();
+          }}
+          onEndReachedThreshold={0}
+          ListFooterComponent={
+            hasMore ? (
+              <View style={{ marginVertical: posts.length ? 200 : 30 }}>
+                <Loading />
+              </View>
+            ) : (
+              <View style={{ marginVertical: 30 }}>
+                <Text style={styles.noPosts}>No more post</Text>
+              </View>
+            )
+          }
         />
-
       </View>
 
       {/* <Button title="Logout" onPress={onLogout} /> */}

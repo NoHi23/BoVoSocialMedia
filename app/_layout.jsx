@@ -1,14 +1,15 @@
 import { Stack, useRouter } from "expo-router";
 import { useEffect } from "react";
+import { LogBox } from "react-native";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { getUserData } from "../services/userService";
-import { LogBox } from "react-native";
 
-LogBox.ignoreLogs(['Warning: TNodeChildrenRenderer',
-  'Warning: MemoizedTNodeRenderer',
-  'Warning: TRendererEngineProvider'
-])
+LogBox.ignoreLogs([
+  "Warning: TNodeChildrenRenderer",
+  "Warning: MemoizedTNodeRenderer",
+  "Warning: TRendererEngineProvider",
+]);
 
 // Nếu trong folder có _layout.js, nó luôn được render và bọc tất cả các route con
 const _layout = () => {
@@ -24,8 +25,7 @@ const MainLayout = () => {
 
   const updateUserData = async (user, email) => {
     let res = await getUserData(user?.id);
-    if (res.success) setUserData({...res.data, email});
-    
+    if (res.success) setUserData({ ...res.data, email });
   };
 
   useEffect(() => {
@@ -48,7 +48,11 @@ const MainLayout = () => {
     });
   }, []);
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="postDetails" options={{ presentation: "modal" }} />
+    </Stack>
+  );
 };
 
 export default _layout;
