@@ -1,18 +1,18 @@
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import ScreenWrapper from '../../components/ScreenWrapper'
-import Header from '../../components/Header'
-import { hp, wp } from "../../helpers/common";
-import { theme } from "../../constants/theme";
-import Avatar from '../../components/Avatar'
-import { useAuth } from '../../contexts/AuthContext'
-import RichTextEditor from "../../components/RichTextEditor";
-import { useRef, useState } from "react";
+import { Video } from 'expo-av';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from "expo-router";
+import { useRef, useState } from "react";
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Icon from "../../assets/icons";
+import Avatar from '../../components/Avatar';
 import Button from '../../components/Button';
-import * as ImagePicker from 'expo-image-picker'
+import Header from '../../components/Header';
+import RichTextEditor from "../../components/RichTextEditor";
+import ScreenWrapper from '../../components/ScreenWrapper';
+import { theme } from "../../constants/theme";
+import { useAuth } from '../../contexts/AuthContext';
+import { hp, wp } from "../../helpers/common";
 import { getSupabaseFileUrl } from "../../services/imageService";
-import { Video } from 'expo-av'
 import { createOrUpdatePost } from "../../services/postService";
 const NewPost = () => {
   const { user } = useAuth();
@@ -25,14 +25,14 @@ const NewPost = () => {
 
   const onPick = async (isImage) => {
     let mediaConfig = {
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+       mediaTypes: 'images',
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.7,
     }
     if (!isImage) {
       mediaConfig = {
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+         mediaTypes: 'videos',
         allowsEditing: true
       }
     }

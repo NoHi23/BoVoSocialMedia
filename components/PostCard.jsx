@@ -2,6 +2,7 @@ import { Video } from "expo-av";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import {
+  Alert,
   Image,
   Share,
   StyleSheet,
@@ -14,6 +15,7 @@ import Icon from "../assets/icons";
 import { theme } from "../constants/theme";
 import { hp, stripHtmlTags, wp } from "../helpers/common";
 import { downloadFile, getSupabaseFileUrl } from "../services/imageService";
+import { createPostLike, removePostLike } from "../services/postService";
 import Avatar from "./Avatar";
 import Loading from "./Loading";
 
@@ -34,7 +36,13 @@ const tagsStyles = {
   },
 };
 
-const PostCard = ({ item, currentUser, router, hasShadow = true }) => {
+const PostCard = ({ item, currentUser, router, hasShadow = true, showMoreIcon = true, }) => {
+  // Early return if item is undefined or null
+  if (!item) {
+    console.log('PostCard: item is undefined');
+    return null;
+  }
+
   const shadowStyle = {
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -44,37 +52,43 @@ const PostCard = ({ item, currentUser, router, hasShadow = true }) => {
   const [likes, setLikes] = useState([]);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
-    setLikes(item?.postLikes);
+    setLikes(item?.postLikes || []);
   }, []);
 
   const openPostDetails = () => {
-    router.push({ pathname: "postDetails", params: { postId: item?.id } });
+    if (!item?.id) {
+      console.log('No item id found for post details');
+      return;
+    }
+    console.log('Opening post details for id:', item.id);
+    router.push({ pathname: 'postDetails', params: { postId: item.id } });
   };
 
-  //   const onLike = async () => {
-  //     if (liked) {
-  //       //remove like
-  //       let updateLikes = likes.filter((like) => like.userId != currentUser?.id);
-  //       setLikes([...updateLikes]);
-  //       let res = await removePostLike(item?.id, currentUser?.id);
-  //       console.log("removed like: ", res);
-  //       if (!res.success) {
-  //         Alert.alert("Post", "Something went wrong!");
-  //       }
-  //     } else {
-  //       //create like
-  //       let data = {
-  //         userId: currentUser?.id,
-  //         postId: item?.id,
-  //       };
-  //       setLikes([...likes, data]);
-  //       let res = await createPostLike(data);
-  //       console.log("added like: ", res);
-  //       if (!res.success) {
-  //         Alert.alert("Post", "Something went wrong!");
-  //       }
-  //     }
-  //   };
+  const onLike = async () => {
+    if (liked) {
+      //remove like
+      let updateLikes = likes.filter((like) => like.userId != currentUser?.id);
+
+      setLikes([...updateLikes]);
+      let res = await removePostLike(item?.id, currentUser?.id);
+      console.log('removed like: ', res);
+      if (!res.success) {
+        Alert.alert('Post', 'Something went wrong!');
+      }
+    } else {
+      //create like
+      let data = {
+        userId: currentUser?.id,
+        postId: item?.id,
+      };
+      setLikes([...likes, data]);
+      let res = await createPostLike(data);
+      console.log('added like: ', res);
+      if (!res.success) {
+        Alert.alert('Post', 'Something went wrong!');
+      }
+    }
+  };
 
   const onShare = async () => {
     let content = { message: stripHtmlTags(item?.body) };
@@ -88,11 +102,10 @@ const PostCard = ({ item, currentUser, router, hasShadow = true }) => {
     Share.share(content);
   };
 
+  
+
   const createAt = moment(item?.created_at).format("MMM D");
-  //   const liked = likes.filter((like) => like.userId == currentUser?.id)[0]
-  //     ? true
-  //     : false;
-  const liked = false;
+  const liked = likes.filter((like) => like.userId == currentUser?.id)[0] ? true : false;
   return (
     <View style={[styles.container, hasShadow && shadowStyle]}>
       <View style={styles.header}>
@@ -104,19 +117,24 @@ const PostCard = ({ item, currentUser, router, hasShadow = true }) => {
             rounded={theme.radius.md}
           />
           <View style={{ gap: 2 }}>
-            <Text style={styles.username}> {item?.user?.name}</Text>
-            <Text style={styles.postTime}> {createAt}</Text>
+            <Text style={styles.username}>{item?.user?.name || 'Unknown User'}</Text>
+            <Text style={styles.postTime}>{createAt || 'Unknown Date'}</Text>
           </View>
         </View>
 
-        <TouchableOpacity onPress={openPostDetails}>
-          <Icon
-            name="threeDotsHorizontal"
-            size={hp(2.5)}
-            color={theme.colors.text}
-            strokeWidth={3}
-          />
-        </TouchableOpacity>
+        {
+          showMoreIcon && (
+            <TouchableOpacity onPress={openPostDetails}>
+              <Icon
+                name="threeDotsHorizontal"
+                size={hp(3.4)}
+                color={theme.colors.text}
+                strokeWidth={3}
+              />
+            </TouchableOpacity>
+          )
+        }
+
       </View>
 
       {/* post body and media  */}
@@ -132,7 +150,7 @@ const PostCard = ({ item, currentUser, router, hasShadow = true }) => {
         </View>
 
         {/* post image */}
-        {item?.file && item?.file?.includes("postImages") && (
+        {item?.file && item?.file?.includes("postImage") && (
           <Image
             source={getSupabaseFileUrl(item?.file)}
             style={styles.postMedia}
@@ -155,9 +173,7 @@ const PostCard = ({ item, currentUser, router, hasShadow = true }) => {
       {/* like , comment share  */}
       <View style={styles.footer}>
         <View style={styles.footerButton}>
-          <TouchableOpacity>
-            {" "}
-            {/* onPress={onLike}  */}
+          <TouchableOpacity onPress={onLike}>
             <Icon
               name="heart"
               size={24}
@@ -165,18 +181,16 @@ const PostCard = ({ item, currentUser, router, hasShadow = true }) => {
               color={liked ? theme.colors.rose : theme.colors.textLight}
             />
           </TouchableOpacity>
-          <Text style={styles.count}>{likes?.length}</Text>
+          <Text style={styles.count}>{likes?.length || 0}</Text>
         </View>
-      </View>
-      <View style={styles.footer}>
+        
         <View style={styles.footerButton}>
           <TouchableOpacity onPress={openPostDetails}>
             <Icon name="comment" size={24} color={theme.colors.textLight} />
           </TouchableOpacity>
-          <Text style={styles.count}>{0}</Text>
+          <Text style={styles.count}>{item?.comments?.length || 0}</Text>
         </View>
-      </View>
-      <View style={styles.footer}>
+        
         <View style={styles.footerButton}>
           {loading ? (
             <Loading size="small" />

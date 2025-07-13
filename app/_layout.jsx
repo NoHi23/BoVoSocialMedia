@@ -22,35 +22,33 @@ const _layout = () => {
 const MainLayout = () => {
   const { setAuth, setUserData } = useAuth();
   const router = useRouter();
-
-  const updateUserData = async (user, email) => {
-    let res = await getUserData(user?.id);
-    if (res.success) setUserData({ ...res.data, email });
-  };
-
   useEffect(() => {
     supabase.auth.onAuthStateChange((_event, session) => {
       // console.log("session user: ", session?.user?.id);
+
       if (session) {
-        // set auth
-        setAuth(session?.user);
-        // update user data in local storage
+        setAuth(session?.user);       
         updateUserData(session?.user, session?.user?.email);
-        // console.log("auth user: ", session?.user?.email);
-        // move to home screen
         router.replace("/Home");
-      } else {
-        // set auth to null
-        setAuth(null);
-        // move to welcome screen
+      } else {       
+        setAuth(null);       
         router.replace("/Welcome");
       }
     });
   }, []);
 
+  const updateUserData = async (user, email) => {
+    let res = await getUserData(user?.id);
+    if (res.success) setUserData({ ...res.data, email });
+  };
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="postDetails" options={{ presentation: "modal" }} />
+    <Stack screenOptions={{ 
+      headerShown: false 
+      }}
+      >
+      <Stack.Screen 
+      name="(main)/postDetails" 
+      options={{ presentation: "modal" }} />
     </Stack>
   );
 };

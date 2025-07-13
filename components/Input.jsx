@@ -1,5 +1,4 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native'
-import React from 'react'
+import { StyleSheet, TextInput, View } from 'react-native'
 import { theme } from '../constants/theme'
 import { hp } from '../helpers/common'
 
@@ -10,9 +9,12 @@ const Input = (props) => {
             {
                 props.icon && props.icon
             }
-            <TextInput style={{ flex: 1 }}
+            <TextInput
+                style={{ flex: 1 }}
                 placeholderTextColor={theme.colors.textLight}
-                ref={props.inputRef && props.inputRef} {...props} />
+                ref={props.inputRef} 
+                {...props} 
+                />
         </View>
     )
 }

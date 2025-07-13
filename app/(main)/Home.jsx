@@ -37,7 +37,7 @@ const Home = () => {
         handlePostEvent
       )
       .subscribe();
-    // getPosts();
+    getPosts();
 
     return () => {
       supabase.removeChannel(postChannel);
@@ -50,8 +50,11 @@ const Home = () => {
     console.log("fetching post: ", limit);
     let res = await fetchPosts(limit);
     if (res.success) {
-      if ((posts.length = res.data.length)) setHasMore(false);
+      console.log("Posts fetched successfully:", res.data.length);
+      if (posts.length === res.data.length) setHasMore(false);
       setPosts(res.data);
+    } else {
+      console.log("Failed to fetch posts:", res.msg);
     }
   };
 
@@ -102,7 +105,7 @@ const Home = () => {
           contentContainerStyle={styles.listStyle}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <PostCard item={item} currentUser={user} route={router} />
+            <PostCard item={item} currentUser={user} router={router} />
           )}
           onEndReached={() => {
             console.log("Go to the end");
@@ -165,7 +168,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(4),
   },
   noPosts: {
-    frontSize: hp(2),
+    fontSize: hp(2),
     textAlign: "center",
     color: theme.colors.text,
   },

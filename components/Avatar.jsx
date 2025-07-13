@@ -7,14 +7,15 @@ import { getUserImageSrc } from "../services/imageService";
 const Avatar = ({
   uri,
   size = hp(4.5),
-  rounded = theme.radius.md,
+  rounded,
   style = {},
 }) => {
+  const borderRadius = rounded || theme.radius.md;
   return (
     <Image
       source={getUserImageSrc(uri)}
       transition={100}
-      style={[styles.avatar, { height: size, width: size, borderRadius: rounded }, style,]}
+      style={[styles.avatar, { height: size, width: size, borderRadius }, style,]}
     />
   );
 };
