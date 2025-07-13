@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Alert, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, FlatList, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Icon from "../../assets/icons";
 import Avatar from "../../components/Avatar";
 import Header from "../../components/Header";
@@ -8,16 +8,37 @@ import { theme } from "../../constants/theme";
 import { useAuth } from "../../contexts/AuthContext";
 import { hp, wp } from "../../helpers/common";
 import { supabase } from "../../lib/supabase";
+import { fetchPosts } from "../../services/postService";
+import { useState } from "react";
+import PostCard from "../../components/PostCard";
+import Loading from "../../components/Loading";
 
-  const Profile = () => { 
+var limit = 0;
+const Profile = () => {
   const { user, setAuth } = useAuth();
   const router = useRouter();
+  const [posts, setPosts] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
 
   const onLogout = async () => {
     setAuth(null);
     const { error } = await supabase.auth.signOut();
     if (error) {
       Alert.alert("Logout", error.message);
+    }
+  };
+
+  const getPosts = async () => {
+    if (!hasMore) return null;
+    limit = limit + 10;
+    console.log("fetching post: ", limit);
+    let res = await fetchPosts(limit, user.id);
+    if (res.success) {
+      console.log("Posts fetched successfully:", res.data.length);
+      if (posts.length === res.data.length) setHasMore(false);
+      setPosts(res.data);
+    } else {
+      console.log("Failed to fetch posts:", res.msg);
     }
   };
 
@@ -38,7 +59,34 @@ import { supabase } from "../../lib/supabase";
   };
   return (
     <ScreenWrapper bg="white">
-      <UserHeader user={user} router={router} handleLogout={handleLogout} />
+
+      <FlatList
+        data={posts}
+        ListHeaderComponent={<UserHeader user={user} router={router} handleLogout={handleLogout} />}
+        ListHeaderComponentStyle={{marginBottom:30}}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listStyle}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <PostCard item={item} currentUser={user} router={router} />
+        )}
+        onEndReached={() => {
+          console.log("Go to the end");
+          getPosts();
+        }}
+        onEndReachedThreshold={0}
+        ListFooterComponent={
+          hasMore ? (
+            <View style={{ marginVertical: posts.length ? 100 : 30 }}>
+              <Loading />
+            </View>
+          ) : (
+            <View style={{ marginVertical: 30 }}>
+              <Text style={styles.noPosts}>No more post</Text>
+            </View>
+          )
+        }
+      />
     </ScreenWrapper>
   );
 };

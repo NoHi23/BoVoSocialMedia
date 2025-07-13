@@ -36,7 +36,7 @@ const tagsStyles = {
   },
 };
 
-const PostCard = ({ item, currentUser, router, hasShadow = true, showMoreIcon = true, }) => {
+const PostCard = ({ item, currentUser, router, hasShadow = true, showMoreIcon = true, showDelete = false, onDelete = () => { }, onEdit = () => { } }) => {
   // Early return if item is undefined or null
   if (!item) {
     console.log('PostCard: item is undefined');
@@ -102,7 +102,22 @@ const PostCard = ({ item, currentUser, router, hasShadow = true, showMoreIcon = 
     Share.share(content);
   };
 
-  
+  const handlePostDelete = () => {
+    Alert.alert("Confirm", "Are you sure you want do this?", [
+      {
+        text: 'Cancel',
+        onPress: () => console.log("modal cancelled"),
+        style: 'cancel',
+      },
+      {
+        text: 'Delete',
+        onPress: () => onDelete(item),
+        style: 'destructive',
+      },
+    ]);
+  }
+
+
 
   const createAt = moment(item?.created_at).format("MMM D");
   const liked = likes.filter((like) => like.userId == currentUser?.id)[0] ? true : false;
@@ -132,6 +147,19 @@ const PostCard = ({ item, currentUser, router, hasShadow = true, showMoreIcon = 
                 strokeWidth={3}
               />
             </TouchableOpacity>
+          )
+        }
+
+        {
+          showDelete && currentUser.id == item?.userId && (
+            <View style={styles.actions}>
+              <TouchableOpacity onPress={() => onEdit(item)}>
+                <Icon name="edit" size={hp(2.5)} color={theme.colors.text} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handlePostDelete}>
+                <Icon name="delete" size={hp(2.5)} color={theme.colors.rose} />
+              </TouchableOpacity>
+            </View>
           )
         }
 
@@ -183,14 +211,14 @@ const PostCard = ({ item, currentUser, router, hasShadow = true, showMoreIcon = 
           </TouchableOpacity>
           <Text style={styles.count}>{likes?.length || 0}</Text>
         </View>
-        
+
         <View style={styles.footerButton}>
           <TouchableOpacity onPress={openPostDetails}>
             <Icon name="comment" size={24} color={theme.colors.textLight} />
           </TouchableOpacity>
           <Text style={styles.count}>{item?.comments?.length || 0}</Text>
         </View>
-        
+
         <View style={styles.footerButton}>
           {loading ? (
             <Loading size="small" />
