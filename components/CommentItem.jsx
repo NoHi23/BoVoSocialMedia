@@ -8,6 +8,7 @@ const CommentItem = ({
     item,
     canDelete = true,
     onDelete = () => { },
+    highlight = false
 }) => {
     console.log('[CommentItem] created_at raw:', item?.created_at);
     const createdAt = item?.created_at ? moment(item.created_at).format('MMM D') : 'Unknown date';
@@ -33,7 +34,7 @@ const CommentItem = ({
                 size={hp(3.5)}
                 rounded={theme.radius.md}
             />
-            <View style={styles.content}>
+            <View style={[styles.content, highlight && styles.highlight]}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <View style={styles.nameContainer}>
                         <Text style={styles.text}>

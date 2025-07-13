@@ -10,11 +10,12 @@ import { theme } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { hp, wp } from '../../helpers/common';
 import { supabase } from '../../lib/supabase';
-import { createComment, fetchPostDetails, removeComment } from '../../services/postService';
+import { createComment, fetchPostDetails, removeComment, removePost } from '../../services/postService';
 import { getUserData } from '../../services/userService';
+import { createNotification } from '../../services/notificationService';
 
 const PostDetails = () => {
-  const { postId } = useLocalSearchParams();
+  const { postId, commentId } = useLocalSearchParams();
   const { user } = useAuth();
   const router = useRouter();
   const [startLoading, setStartLoading] = useState(true);
@@ -80,6 +81,17 @@ const PostDetails = () => {
     let res = await createComment(data);
     setLoading(false);
     if (res.success) {
+
+      if (user.id != post.userId) {
+        let notify = {
+          senderId: user.id,
+          receiverId: post.userId,
+          title: 'commented on your post',
+          data: JSON.stringify({ postId: post.id, commentId: res?.data?.id })
+        }
+        createNotification(notify);
+      }
+
       // Refresh post details to get updated comments
       await getPostDetails();
       // send notification later
@@ -103,6 +115,25 @@ const PostDetails = () => {
       Alert.alert('Comment', res.msg);
     }
   };
+
+
+  const onDeletePost = async (item) => {
+    // console.log("delete post: ", item);
+
+    let res = await removePost(post.id);
+    if (res.success) {
+      router.back();
+    } else {
+      Alert.alert('Post', res.msg)
+    }
+  }
+
+  const onEditPost = async (item) => {
+    // console.log("edit post: ", item);
+    router.back();
+    router.push({ pathname: 'newPost', params: { ...item } })
+  }
+
 
   if (startLoading) {
     return (
@@ -129,6 +160,9 @@ const PostDetails = () => {
           router={router}
           hasShadow={false}
           showMoreIcon={false}
+          showDelete={true}
+          onDelete={onDeletePost}
+          onEdit={onEditPost}
         />
 
 
@@ -163,6 +197,7 @@ const PostDetails = () => {
                 key={comment?.id?.toString()}
                 item={comment}
                 onDelete={onDeleteComment}
+                highlight = {comment.id == commentId}
                 canDelete={user.id == comment.userId || user.id == post.userId}
               />
             )
