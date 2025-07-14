@@ -1,8 +1,8 @@
+import moment from 'moment'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { theme } from '../constants/theme'
 import { hp } from '../helpers/common'
 import Avatar from './Avatar'
-import moment from 'moment'
 
 const NotificationItem = ({
   item, router
@@ -13,7 +13,7 @@ const NotificationItem = ({
     router.push({ pathname: 'postDetails', params: { postId, commentId } })
   }
 
-  const createdAt = moment(item?.created_at).format('DD/MM/YYYY HH:mm')
+  const createdAt = item?.created_at ? moment(item.created_at).format('DD/MM/YYYY HH:mm') : 'Ngày không xác định'
   return (
     <TouchableOpacity style={styles.container} onPress={handleClick}>
       <Avatar uri={item?.sender?.image} size={hp(5)} />

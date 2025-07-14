@@ -24,12 +24,20 @@ const PostDetails = () => {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(false);
   const handleNewComment = async (payload) => {
-    console.log('got new comment', payload.new)
+    console.log('PostDetails - got new comment', payload.new)
     if (payload.new) {
       let newComment = { ...payload.new };
       let res = await getUserData(newComment.userId);
       newComment.user = res.success ? res.data : {};
       setPost(prevPost => {
+        // Check if comment already exists to avoid duplicates
+        const existingComment = prevPost.comments?.find(comment => comment.id === newComment.id);
+        if (existingComment) {
+          console.log('PostDetails - Comment already exists, skipping...');
+          return prevPost;
+        }
+        
+        console.log('PostDetails - Adding new comment');
         return {
           ...prevPost,
           comments: [newComment, ...prevPost.comments]
@@ -39,7 +47,7 @@ const PostDetails = () => {
   }
   useEffect(() => {
     let commentChannel = supabase
-      .channel("comments")
+      .channel(`post-details-comments-${postId}`)
       .on(
         "postgres_changes",
         {

@@ -1,5 +1,4 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import { View } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // useSafeAreaInsets giúp app của bạn KHÔNG hiển thị vào những phần bị che hoặc không an toàn trên màn hình.

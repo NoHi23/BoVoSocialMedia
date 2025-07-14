@@ -119,7 +119,7 @@ const PostCard = ({ item, currentUser, router, hasShadow = true, showMoreIcon = 
 
 
 
-  const createAt = moment(item?.created_at).format("DD/MM/YYYY HH:mm");
+  const createAt = item?.created_at ? moment(item.created_at).format("DD/MM/YYYY HH:mm") : 'Unknown Date';
   const liked = likes.filter((like) => like.userId == currentUser?.id)[0] ? true : false;
   return (
     <View style={[styles.container, hasShadow && shadowStyle]}>
@@ -133,7 +133,7 @@ const PostCard = ({ item, currentUser, router, hasShadow = true, showMoreIcon = 
           />
           <View style={{ gap: 2 }}>
             <Text style={styles.username}>{item?.user?.name || 'Unknown User'}</Text>
-            <Text style={styles.postTime}>{createAt || 'Unknown Date'}</Text>
+            <Text style={styles.postTime}>{createAt}</Text>
           </View>
         </View>
 

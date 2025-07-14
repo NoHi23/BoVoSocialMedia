@@ -9,6 +9,7 @@ LogBox.ignoreLogs([
   "Warning: TNodeChildrenRenderer",
   "Warning: MemoizedTNodeRenderer",
   "Warning: TRendererEngineProvider",
+  "Text strings must be rendered within a <Text> component",
 ]);
 
 // Nếu trong folder có _layout.js, nó luôn được render và bọc tất cả các route con
