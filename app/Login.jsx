@@ -21,7 +21,7 @@ const Login = () => {
         const password = passwordRef.current.trim();
         // check if email and password are filled
         if (!email || !password) {
-            Alert.alert('Login', 'Please fill all fields');
+            Alert.alert('Đăng nhập', 'Vui lòng điền vào tất cả các trường thông tin');
             return;
         }
 
@@ -32,7 +32,7 @@ const Login = () => {
         setLoading(false);
         console.log('error', error);
         if (error) {
-            Alert.alert('Login', error.message);
+            Alert.alert('Đăng nhập', error.message);
         }
     }
     return (
@@ -43,35 +43,35 @@ const Login = () => {
 
                 {/* welcome  */}
                 <View>
-                    <Text style={styles.welcomeText}>Hey</Text>
-                    <Text style={styles.welcomeText}>Welcome Back</Text>
+                    <Text style={styles.welcomeText}>Hí...</Text>
+                    <Text style={styles.welcomeText}>Chào mừng trở lại</Text>
                 </View>
 
                 {/* form  */}
                 <View style={styles.form}>
                     <Text style={{ fontSize: hp(1.5), color: theme.colors.text }}>
-                        Please login to continue
+                        Vui lòng đăng nhập để tiếp tục
                     </Text>
                     <Input icon={<Icon name='mail' size={26} strokeWidth={1.6} />}
-                        placeholder='Enter your email' onChangeText={value => { emailRef.current = value }} />
+                        placeholder='Nhập địa chỉ email của bạn' onChangeText={value => { emailRef.current = value }} />
                     <Input icon={<Icon name='lock' size={26} strokeWidth={1.6} />}
-                        placeholder='Enter your password' onChangeText={value => { passwordRef.current = value }}
+                        placeholder='Nhập mật khẩu của bạn' onChangeText={value => { passwordRef.current = value }}
                         secureTextEntry />
                     <Text style={styles.forgotPaswword}>
-                        Forgot Password?
+                        Quên mật khẩu?
                     </Text>
                     {/* button  */}
-                    <Button title={'Login'} loading={loading} onPress={onsubmit} />
+                    <Button title={'Đăng nhập'} loading={loading} onPress={onsubmit} />
                 </View>
 
                 {/* footer  */}
                 <View style={styles.footer}>
                     <Text style={styles.footerText}>
-                        Don't have an account?
+                        Bạn chưa có tài khoản?
                     </Text>
                     <Pressable onPress={() => router.push('SignUp')}>
                         <Text style={[styles.footerText, { color: theme.colors.primaryDark, fontWeight: theme.fonts.semibold }]}>
-                            Sign up
+                            Đăng ký
                         </Text>
                     </Pressable>
                 </View>

@@ -11,17 +11,17 @@ const CommentItem = ({
     highlight = false
 }) => {
     console.log('[CommentItem] created_at raw:', item?.created_at);
-    const createdAt = item?.created_at ? moment(item.created_at).format('MMM D') : 'Unknown date';
+    const createdAt = item?.created_at ? moment(item.created_at).format('DD/MM/YYYY HH:mm') : 'Ngày không xác định';
     console.log('[CommentItem] formatted date:', createdAt);
     const handleDelete = () => {
-        Alert.alert("Confirm", "Are you sure you want do this?", [
+        Alert.alert("Xác nhận", "Bạn có chắc chắn muốn làm điều này không?", [
             {
-                text: 'Cancel',
+                text: 'Hủy bỏ',
                 onPress: () => console.log("modal cancelled"),
                 style: 'cancel',
             },
             {
-                text: 'Delete',
+                text: 'Xóa',
                 onPress: () => onDelete(item),
                 style: 'destructive',
             },

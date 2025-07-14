@@ -1,5 +1,4 @@
 import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
 import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor'
 import { theme } from '../constants/theme'
 
@@ -37,7 +36,7 @@ const RichTextEditor = ({ editorRef, onChange }) => {
         ref={editorRef}
         containerStyle={styles.rich}
         editorStyle={styles.containerStyle}
-        placeholder={"What's on your mind?"}
+        placeholder={"Bạn đang nghĩ gì vậy?"}
         onChange={onChange}
       />
     </View>
