@@ -73,7 +73,7 @@ const PostCard = ({ item, currentUser, router, hasShadow = true, showMoreIcon = 
       let res = await removePostLike(item?.id, currentUser?.id);
       console.log('removed like: ', res);
       if (!res.success) {
-        Alert.alert('Post', 'Something went wrong!');
+        Alert.alert('Bài đăng', 'Có gì đó không ổn!');
       }
     } else {
       //create like
@@ -85,7 +85,7 @@ const PostCard = ({ item, currentUser, router, hasShadow = true, showMoreIcon = 
       let res = await createPostLike(data);
       console.log('added like: ', res);
       if (!res.success) {
-        Alert.alert('Post', 'Something went wrong!');
+        Alert.alert('Bài đăng', 'Có gì đó không ổn!');
       }
     }
   };
@@ -103,14 +103,14 @@ const PostCard = ({ item, currentUser, router, hasShadow = true, showMoreIcon = 
   };
 
   const handlePostDelete = () => {
-    Alert.alert("Confirm", "Are you sure you want do this?", [
+    Alert.alert("Xác nhận", "Bạn có chắc chắn muốn làm điều này không?", [
       {
-        text: 'Cancel',
+        text: 'Hủy bỏ',
         onPress: () => console.log("modal cancelled"),
         style: 'cancel',
       },
       {
-        text: 'Delete',
+        text: 'Xóa',
         onPress: () => onDelete(item),
         style: 'destructive',
       },
@@ -119,7 +119,7 @@ const PostCard = ({ item, currentUser, router, hasShadow = true, showMoreIcon = 
 
 
 
-  const createAt = moment(item?.created_at).format("MMM D");
+  const createAt = moment(item?.created_at).format("DD/MM/YYYY HH:mm");
   const liked = likes.filter((like) => like.userId == currentUser?.id)[0] ? true : false;
   return (
     <View style={[styles.container, hasShadow && shadowStyle]}>

@@ -13,7 +13,7 @@ const NotificationItem = ({
     router.push({ pathname: 'postDetails', params: { postId, commentId } })
   }
 
-  const createdAt = moment(item?.created_at).format('MMM d')
+  const createdAt = moment(item?.created_at).format('DD/MM/YYYY HH:mm')
   return (
     <TouchableOpacity style={styles.container} onPress={handleClick}>
       <Avatar uri={item?.sender?.image} size={hp(5)} />

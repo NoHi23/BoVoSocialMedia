@@ -16,23 +16,23 @@ const Welcome = () => {
                 <Image style={styles.welcomeImage} source={require('../assets/images/welcome.png')} />
                 {/* title  */}
                 <View style={{ gap: 20, marginTop: hp(10) }}>
-                    <Text style={styles.title}>Linkup!</Text>
+                    <Text style={styles.title}>Bạn sẽ không bao giờ Bơ Vơ</Text>
                     <Text style={styles.punchline}>
-                        Where every thoughts finds a home and every image tells a story</Text>
+                        Nơi mọi suy nghĩ và mọi hình ảnh đều kể một câu chuyện. Bạn sẽ không bao giờ bơ vơ một mình.</Text>
                 </View>
                 {/* footer  */}
                 <View style={styles.footer}>
-                    <Button title='Getting Started'
+                    <Button title='Bắt đầu'
                         buttonStyle={{ marginHorizontal: wp(10) }}
-                        onPress={() => {router.push('SignUp')}} // Navigate to login screen when button is pressed
+                        onPress={() => { router.push('SignUp') }} // Navigate to login screen when button is pressed
                     />
                     <View style={styles.bottomTextContainer}>
                         <Text>
-                            Already have an account?
+                            Bạn đã có tài khoản?
                         </Text>
                         <Pressable onPress={() => router.push('Login')}>
-                            <Text style={[styles.loginText, {color: theme.colors.primaryDark, fontWeight: theme.fonts.semibold}]}>
-                                Sign in
+                            <Text style={[styles.loginText, { color: theme.colors.primaryDark, fontWeight: theme.fonts.semibold }]}>
+                                Đăng nhập
                             </Text>
                         </Pressable>
                     </View>

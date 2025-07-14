@@ -10,9 +10,9 @@ import { theme } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { hp, wp } from '../../helpers/common';
 import { supabase } from '../../lib/supabase';
+import { createNotification } from '../../services/notificationService';
 import { createComment, fetchPostDetails, removeComment, removePost } from '../../services/postService';
 import { getUserData } from '../../services/userService';
-import { createNotification } from '../../services/notificationService';
 
 const PostDetails = () => {
   const { postId, commentId } = useLocalSearchParams();
@@ -86,7 +86,7 @@ const PostDetails = () => {
         let notify = {
           senderId: user.id,
           receiverId: post.userId,
-          title: 'commented on your post',
+          title: 'đã bình luận về bài đăng của bạn',
           data: JSON.stringify({ postId: post.id, commentId: res?.data?.id })
         }
         createNotification(notify);
@@ -98,7 +98,7 @@ const PostDetails = () => {
       inputRef?.current?.clear();
       commentRef.current = "";
     } else {
-      Alert.alert('Comment', res.msg);
+      Alert.alert('Bình luận', res.msg);
     }
   }
 
@@ -112,7 +112,7 @@ const PostDetails = () => {
         return updatePost;
       });
     } else {
-      Alert.alert('Comment', res.msg);
+      Alert.alert('Bình luận', res.msg);
     }
   };
 
@@ -146,7 +146,7 @@ const PostDetails = () => {
   if (!post) {
     return (
       <View style={[styles.center, { justifyContent: 'flex-start', marginTop: 100 }]}>
-        <Text style={styles.notFound}>Post not found</Text>
+        <Text style={styles.notFound}>Không tìm thấy bài viết</Text>
       </View>
     );
   }
@@ -171,7 +171,7 @@ const PostDetails = () => {
         <View style={styles.inputContainer}>
           <Input
             inputRef={inputRef}
-            placeholder="Type comment..."
+            placeholder="Nhập bình luận..."
             onChangeText={value => commentRef.current = value}
             placeholderTextColor={theme.colors.textLight}
             containerStyle={{ flex: 1, height: hp(6.2), borderRadius: theme.radius.xl }}
@@ -206,7 +206,7 @@ const PostDetails = () => {
           {
             post?.comments?.length === 0 && (
               <Text style={{ color: theme.colors.text, marginLeft: 5 }}>
-                Be first to comment!
+                Hãy là người đầu tiên bình luận!
               </Text>
             )
           }
