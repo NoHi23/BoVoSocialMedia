@@ -41,40 +41,34 @@ const NewPost = () => {
 
   const onPick = async (isImage) => {
     let mediaConfig = {
-      mediaTypes: 'images',
+      mediaTypes: isImage ? ImagePicker.MediaTypeOptions.Images : ImagePicker.MediaTypeOptions.Videos,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.7,
-    }
-    if (!isImage) {
-      mediaConfig = {
-        mediaTypes: 'videos',
-        allowsEditing: true
-      }
-    }
-    let result = await ImagePicker.launchImageLibraryAsync(mediaConfig)
+    };
 
-    console.log('file', result.assets[0]);
+    let result = await ImagePicker.launchImageLibraryAsync(mediaConfig);
 
     if (!result.canceled) {
       const selectedFile = result.assets[0];
 
-      setCheckingWithAI(true);
-      const isSafe = await checkImageWithGemini(selectedFile.uri);
-      setCheckingWithAI(false);
-      if (!isSafe) {
-        Alert.alert('Ảnh không được phép', 'Hình ảnh chứa nội dung nhạy cảm, vui lòng chọn ảnh khác.');
-        return;
+      if (isImage) {
+        setCheckingWithAI(true);
+        const isSafe = await checkImageWithGemini(selectedFile.uri);
+        setCheckingWithAI(false);
+
+        if (!isSafe) {
+          Alert.alert('Ảnh không được phép', 'Hình ảnh chứa nội dung nhạy cảm, vui lòng chọn ảnh khác.');
+          return;
+        }
+
+        Alert.alert('Ảnh hợp lệ', 'AI xác nhận đây là hình ảnh hợp lệ, bạn có thể tiếp tục đăng bài.');
       }
-      Alert.alert(
-        'Ảnh hợp lệ',
-        'AI xác nhận đây là hình ảnh hợp lệ, bạn có thể tiếp tục đăng bài.'
-      );
 
+      // ✅ Set file cho cả ảnh và video
       setFile(selectedFile);
-
     }
-  }
+  };
 
   const checkImageWithGemini = async (imageUri) => {
     try {
