@@ -28,6 +28,7 @@ const NewPost = () => {
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState(file)
   const [checkingWithAI, setCheckingWithAI] = useState(false);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
 
   useEffect(() => {
     if (post && post.id) {
@@ -190,8 +191,57 @@ const NewPost = () => {
 
   }
 
-  console.log('file uri: ', getFileUri(file));
+  const generateDescriptionWithAI = async () => {
+    if (!file || getFileType(file) !== 'image') return;
 
+    try {
+      setGeneratingDescription(true);
+      const base64 = await getBase64(getFileUri(file));
+
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyA8FkJ9XTonXbIsN0rcN-GeLlrmNmUR3EM', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                inlineData: {
+                  mimeType: "image/jpeg",
+                  data: base64,
+                }
+              },
+              {
+                text: `
+Bạn là một trợ lý chuyên tạo mô tả hấp dẫn cho bài đăng mạng xã hội dựa trên hình ảnh.
+
+Hãy viết một caption sáng tạo, cảm xúc và thu hút sự chú ý phù hợp để đăng bài trên mạng xã hội. Caption có thể dài (2-5 câu) và nên thêm hashtag hoặc emoji nếu cần thiết.
+
+Chỉ trả về phần caption bằng tiếng Việt. Không giải thích gì thêm.
+`
+              }
+            ]
+          }]
+        })
+      });
+
+      const result = await res.json();
+      const description = result?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+      if (description) {
+        bodyRef.current = description;
+        editorRef.current?.setContentHTML(description);
+      } else {
+        Alert.alert("Lỗi", "Không tạo được mô tả từ AI.");
+      }
+    } catch (err) {
+      console.error("Gemini Gen Error:", err);
+      Alert.alert("Lỗi", "Không kết nối được tới AI.");
+    } finally {
+      setGeneratingDescription(false); // ✅ Tắt loading riêng
+    }
+  };
   return (
 
     <ScreenWrapper bg='white'>
@@ -218,6 +268,22 @@ const NewPost = () => {
           <View style={styles.textEditor}>
             <RichTextEditor editorRef={editorRef} onChange={body => bodyRef.current = body} />
           </View>
+          {file && getFileType(file) === 'image' && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: theme.colors.primary,
+                paddingVertical: 10,
+                borderRadius: 8,
+                marginTop: 10,
+                alignItems: 'center'
+              }}
+              onPress={generateDescriptionWithAI}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>
+                Tạo mô tả bằng AI
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {
             file && (
@@ -268,6 +334,13 @@ const NewPost = () => {
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingBox}>
             <Text style={styles.loadingText}>AI đang kiểm tra ảnh...</Text>
+          </View>
+        </View>
+      )}
+      {generatingDescription && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingBox}>
+            <Text style={styles.loadingText}>AI đang tạo mô tả ảnh...</Text>
           </View>
         </View>
       )}
