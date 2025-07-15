@@ -1,4 +1,5 @@
 import { Video } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -14,6 +15,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { hp, wp } from "../../helpers/common";
 import { getSupabaseFileUrl } from "../../services/imageService";
 import { createOrUpdatePost } from "../../services/postService";
+
 const NewPost = () => {
 
   const post = useLocalSearchParams();
@@ -25,6 +27,8 @@ const NewPost = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState(file)
+  const [checkingWithAI, setCheckingWithAI] = useState(false);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
 
   useEffect(() => {
     if (post && post.id) {
@@ -38,25 +42,96 @@ const NewPost = () => {
 
   const onPick = async (isImage) => {
     let mediaConfig = {
-      mediaTypes: 'images',
+      mediaTypes: isImage ? ImagePicker.MediaTypeOptions.Images : ImagePicker.MediaTypeOptions.Videos,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.7,
-    }
-    if (!isImage) {
-      mediaConfig = {
-        mediaTypes: 'videos',
-        allowsEditing: true
-      }
-    }
-    let result = await ImagePicker.launchImageLibraryAsync(mediaConfig)
+    };
 
-    console.log('file', result.assets[0]);
+    let result = await ImagePicker.launchImageLibraryAsync(mediaConfig);
 
     if (!result.canceled) {
-      setFile(result.assets[0]);
+      const selectedFile = result.assets[0];
+
+      if (isImage) {
+        setCheckingWithAI(true);
+        const isSafe = await checkImageWithGemini(selectedFile.uri);
+        setCheckingWithAI(false);
+
+        if (!isSafe) {
+          Alert.alert('Ảnh không được phép', 'Hình ảnh chứa nội dung nhạy cảm, vui lòng chọn ảnh khác.');
+          return;
+        }
+
+        Alert.alert('Ảnh hợp lệ', 'AI xác nhận đây là hình ảnh hợp lệ, bạn có thể tiếp tục đăng bài.');
+      }
+
+      // ✅ Set file cho cả ảnh và video
+      setFile(selectedFile);
     }
-  }
+  };
+
+  const checkImageWithGemini = async (imageUri) => {
+    try {
+      const base64 = await getBase64(imageUri);
+
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyA8FkJ9XTonXbIsN0rcN-GeLlrmNmUR3EM', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                inlineData: {
+                  mimeType: "image/jpeg",
+                  data: base64,
+                }
+              },
+              {
+                text: `
+      This image will be posted on a public, family-friendly social media platform. The platform strictly prohibits any of the following content:
+
+      - Sexual content (e.g. nudity, visible cleavage, lingerie, exposed buttocks or genitals, sexually suggestive poses)
+      - Violence (e.g. blood, gore, injuries, guns, knives, or scenes depicting physical harm)
+      - Shocking or disturbing content
+      - Hate symbols or offensive gestures
+      - Drug use or paraphernalia
+
+      Please analyze the image based on the above criteria and answer **with only one word**: SAFE or UNSAFE.
+
+      Do NOT explain anything. Just return either SAFE or UNSAFE.
+    `
+              }
+            ]
+          }]
+        })
+      });
+
+      const result = await res.json();
+      const text = result?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const normalized = text.trim().toLowerCase();
+
+      console.log("Gemini result: ", normalized);
+
+      if (normalized.includes("unsafe")) return false;
+      if (normalized.includes("safe")) return true;
+
+      return false; // fallback nếu không rõ
+    } catch (error) {
+      console.error("Gemini error", error);
+      return true; // fallback nếu lỗi
+    }
+  };
+
+
+  const getBase64 = async (uri) => {
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return base64;
+  };
 
   const isLocalFile = file => {
     if (!file) return null;
@@ -116,9 +191,59 @@ const NewPost = () => {
 
   }
 
-  console.log('file uri: ', getFileUri(file));
+  const generateDescriptionWithAI = async () => {
+    if (!file || getFileType(file) !== 'image') return;
 
+    try {
+      setGeneratingDescription(true);
+      const base64 = await getBase64(getFileUri(file));
+
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyA8FkJ9XTonXbIsN0rcN-GeLlrmNmUR3EM', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                inlineData: {
+                  mimeType: "image/jpeg",
+                  data: base64,
+                }
+              },
+              {
+                text: `
+Bạn là một trợ lý chuyên tạo mô tả hấp dẫn cho bài đăng mạng xã hội dựa trên hình ảnh.
+
+Hãy viết một caption sáng tạo, cảm xúc và thu hút sự chú ý phù hợp để đăng bài trên mạng xã hội. Caption có thể dài (2-5 câu) và nên thêm hashtag hoặc emoji nếu cần thiết.
+
+Chỉ trả về phần caption bằng tiếng Việt. Không giải thích gì thêm.
+`
+              }
+            ]
+          }]
+        })
+      });
+
+      const result = await res.json();
+      const description = result?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+      if (description) {
+        bodyRef.current = description;
+        editorRef.current?.setContentHTML(description);
+      } else {
+        Alert.alert("Lỗi", "Không tạo được mô tả từ AI.");
+      }
+    } catch (err) {
+      console.error("Gemini Gen Error:", err);
+      Alert.alert("Lỗi", "Không kết nối được tới AI.");
+    } finally {
+      setGeneratingDescription(false); // ✅ Tắt loading riêng
+    }
+  };
   return (
+
     <ScreenWrapper bg='white'>
       <View style={styles.container}>
         <Header title="Tạo bài đăng" />
@@ -143,6 +268,22 @@ const NewPost = () => {
           <View style={styles.textEditor}>
             <RichTextEditor editorRef={editorRef} onChange={body => bodyRef.current = body} />
           </View>
+          {file && getFileType(file) === 'image' && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: theme.colors.primary,
+                paddingVertical: 10,
+                borderRadius: 8,
+                marginTop: 10,
+                alignItems: 'center'
+              }}
+              onPress={generateDescriptionWithAI}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>
+                Tạo mô tả bằng AI
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {
             file && (
@@ -189,6 +330,20 @@ const NewPost = () => {
         />
 
       </View>
+      {checkingWithAI && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingBox}>
+            <Text style={styles.loadingText}>AI đang kiểm tra ảnh...</Text>
+          </View>
+        </View>
+      )}
+      {generatingDescription && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingBox}>
+            <Text style={styles.loadingText}>AI đang tạo mô tả ảnh...</Text>
+          </View>
+        </View>
+      )}
     </ScreenWrapper>
   );
 };
@@ -274,6 +429,32 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     padding: 7,
     backgroundColor: 'rgba(255,0,0,0.6)'
-  }
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  loadingBox: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+  },
 
 });

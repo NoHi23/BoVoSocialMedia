@@ -304,7 +304,7 @@ const Home = () => {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>LinkUp</Text>
+          <Text style={styles.title}>Bơ Vơ Social</Text>
           <View style={styles.icons}>
             <Pressable onPress={() => {
               setNotificationCount(0);
