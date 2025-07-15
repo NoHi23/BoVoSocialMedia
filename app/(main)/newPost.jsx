@@ -3,21 +3,29 @@ import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Icon from "../../assets/icons";
-import Avatar from '../../components/Avatar';
-import Button from '../../components/Button';
-import Header from '../../components/Header';
+import Avatar from "../../components/Avatar";
+import Button from "../../components/Button";
+import Header from "../../components/Header";
 import RichTextEditor from "../../components/RichTextEditor";
-import ScreenWrapper from '../../components/ScreenWrapper';
+import ScreenWrapper from "../../components/ScreenWrapper";
 import { theme } from "../../constants/theme";
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from "../../contexts/AuthContext";
 import { hp, wp } from "../../helpers/common";
 import { getSupabaseFileUrl } from "../../services/imageService";
 import { createOrUpdatePost } from "../../services/postService";
 
 const NewPost = () => {
-
   const post = useLocalSearchParams();
 
   const { user } = useAuth();
@@ -33,12 +41,12 @@ const NewPost = () => {
   useEffect(() => {
     if (post && post.id) {
       bodyRef.current = post.body;
-      setFile(post.file || null)
+      setFile(post.file || null);
       setTimeout(() => {
         editorRef?.current?.setContentHTML(post.body);
-      }, 300)
+      }, 300);
     }
-  }, [])
+  }, []);
 
   const onPick = async (isImage) => {
     let mediaConfig = {
@@ -133,37 +141,39 @@ const NewPost = () => {
     return base64;
   };
 
-  const isLocalFile = file => {
+  const isLocalFile = (file) => {
     if (!file) return null;
-    if (typeof file == 'object') return true;
+    if (typeof file == "object") return true;
     return false;
-  }
+  };
 
-  const getFileType = file => {
+  const getFileType = (file) => {
     if (!file) return null;
     if (isLocalFile(file)) {
       return file.type;
     }
 
-    if (file.includes('postImage')) {
-      return 'image'
+    if (file.includes("postImage")) {
+      return "image";
     }
-    return 'video';
+    return "video";
+  };
 
-  }
-
-  const getFileUri = file => {
+  const getFileUri = (file) => {
     if (!file) return null;
     if (isLocalFile(file)) {
       return file.uri;
     }
 
-    return getSupabaseFileUrl(file)?.uri
-  }
+    return getSupabaseFileUrl(file)?.uri;
+  };
 
   const onSubmit = async () => {
     if (!bodyRef.current && !file) {
-      Alert.alert('Post', "Vui lòng chọn một hình ảnh hoặc thêm nội dung bài viết")
+      Alert.alert(
+        "Post",
+        "Vui lòng chọn một hình ảnh hoặc thêm nội dung bài viết"
+      );
       return;
     }
 
@@ -171,7 +181,7 @@ const NewPost = () => {
       file,
       body: bodyRef.current,
       userId: user?.id,
-    }
+    };
 
     if (post && post.id) {
       data.id = post.id;
@@ -182,12 +192,13 @@ const NewPost = () => {
     setLoading(false);
     if (res.success) {
       setFile(null);
-      bodyRef.current = '';
-      editorRef.current?.setContentHTML('');
+      bodyRef.current = "";
+      editorRef.current?.setContentHTML("");
       router.back();
     } else {
-      Alert.alert('Post', res.msg)
+      Alert.alert("Post", res.msg);
     }
+  };
 
   }
 
@@ -255,18 +266,16 @@ Chỉ trả về phần caption bằng tiếng Việt. Không giải thích gì 
               rounded={theme.radius.xl}
             />
             <View style={{ gap: 2 }}>
-              <Text style={styles.username}>
-                {user && user.name}
-              </Text>
-              <Text style={styles.publicText}>
-                Công khai
-              </Text>
+              <Text style={styles.username}>{user && user.name}</Text>
+              <Text style={styles.publicText}>Công khai</Text>
             </View>
           </View>
 
-
           <View style={styles.textEditor}>
-            <RichTextEditor editorRef={editorRef} onChange={body => bodyRef.current = body} />
+            <RichTextEditor
+              editorRef={editorRef}
+              onChange={(body) => (bodyRef.current = body)}
+            />
           </View>
           {file && getFileType(file) === 'image' && (
             <TouchableOpacity
@@ -302,12 +311,11 @@ Chỉ trả về phần caption bằng tiếng Việt. Không giải thích gì 
                   )
                 }
 
-                <Pressable style={styles.closeIcon} onPress={() => setFile(null)}>
-                  <Icon name="delete" size={20} color="white" />
-                </Pressable>
-              </View>
-            )
-          }
+              <Pressable style={styles.closeIcon} onPress={() => setFile(null)}>
+                <Icon name="delete" size={20} color="white" />
+              </Pressable>
+            </View>
+          )}
 
           <View style={styles.media}>
             <Text style={styles.addImageText}>Thêm vào bài viết của bạn</Text>
@@ -328,7 +336,6 @@ Chỉ trả về phần caption bằng tiếng Việt. Không giải thích gì 
           hasShadow={false}
           onPress={onSubmit}
         />
-
       </View>
       {checkingWithAI && (
         <View style={styles.loadingOverlay}>
@@ -354,18 +361,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     marginBottom: 30,
-    paddingHorizontal: wp(4)
+    paddingHorizontal: wp(4),
   },
   title: {
     fontSize: hp(2.5),
     fontWeight: theme.fonts.semibold,
     color: theme.colors.text,
-    textAlign: 'center'
+    textAlign: "center",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
   username: {
     fontSize: hp(2.2),
@@ -376,54 +383,50 @@ const styles = StyleSheet.create({
     height: hp(6.5),
     width: hp(6.5),
     borderRadius: theme.radius.xl,
-    borderCurve: 'continuous',
+    borderCurve: "continuous",
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)'
+    borderColor: "rgba(0,0,0,0.1)",
   },
   publicText: {
     fontSize: hp(1.7),
     fontWeight: theme.colors.medium,
     color: theme.colors.textLight,
   },
-  textEditor: {
-
-  },
+  textEditor: {},
   media: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderWidth: 1.5,
     padding: 12,
     paddingHorizontal: 18,
     borderRadius: theme.radius.xl,
-    borderCurve: 'continuous',
-    borderColor: theme.colors.gray
+    borderCurve: "continuous",
+    borderColor: theme.colors.gray,
   },
   mediaIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 15,
   },
   addImageText: {
     fontSize: hp(1.9),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text
+    color: theme.colors.text,
   },
   imageIcon: {
     borderRadius: theme.radius.md,
   },
   file: {
     height: hp(30),
-    width: '100%',
+    width: "100%",
     borderRadius: theme.radius.xl,
-    overflow: 'hidden',
-    borderCurve: 'continuous'
+    overflow: "hidden",
+    borderCurve: "continuous",
   },
-  video: {
-
-  },
+  video: {},
   closeIcon: {
-    position: 'absolute',
+    position: "absolute",
     top: 10,
     right: 10,
     borderRadius: 50,
