@@ -1,4 +1,5 @@
 import { Video } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -14,6 +15,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { hp, wp } from "../../helpers/common";
 import { getSupabaseFileUrl } from "../../services/imageService";
 import { createOrUpdatePost } from "../../services/postService";
+
 const NewPost = () => {
 
   const post = useLocalSearchParams();
@@ -25,6 +27,7 @@ const NewPost = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState(file)
+  const [checkingWithAI, setCheckingWithAI] = useState(false);
 
   useEffect(() => {
     if (post && post.id) {
@@ -54,9 +57,74 @@ const NewPost = () => {
     console.log('file', result.assets[0]);
 
     if (!result.canceled) {
-      setFile(result.assets[0]);
+      const selectedFile = result.assets[0];
+
+      setCheckingWithAI(true);
+      const isSafe = await checkImageWithGemini(selectedFile.uri);
+      setCheckingWithAI(false);
+      if (!isSafe) {
+        Alert.alert('Ảnh không được phép', 'Hình ảnh chứa nội dung nhạy cảm, vui lòng chọn ảnh khác.');
+        return;
+      }
+      Alert.alert(
+        'Ảnh hợp lệ',
+        'AI xác nhận đây là hình ảnh hợp lệ, bạn có thể tiếp tục đăng bài.'
+      );
+
+      setFile(selectedFile);
+
     }
   }
+
+  const checkImageWithGemini = async (imageUri) => {
+    try {
+      const base64 = await getBase64(imageUri);
+
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyA8FkJ9XTonXbIsN0rcN-GeLlrmNmUR3EM', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                inlineData: {
+                  mimeType: "image/jpeg",
+                  data: base64,
+                }
+              },
+              {
+                text: "Please analyze this image and respond only with one word: SAFE or UNSAFE. Is this image safe for public viewing (no nudity, violence, or sensitive content)?"
+              }
+            ]
+          }]
+        })
+      });
+
+      const result = await res.json();
+      const text = result?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const normalized = text.trim().toLowerCase();
+
+      console.log("Gemini result: ", normalized);
+
+      if (normalized.includes("unsafe")) return false;
+      if (normalized.includes("safe")) return true;
+
+      return false; // fallback nếu không rõ
+    } catch (error) {
+      console.error("Gemini error", error);
+      return true; // fallback nếu lỗi
+    }
+  };
+
+
+  const getBase64 = async (uri) => {
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return base64;
+  };
 
   const isLocalFile = file => {
     if (!file) return null;
@@ -119,6 +187,7 @@ const NewPost = () => {
   console.log('file uri: ', getFileUri(file));
 
   return (
+
     <ScreenWrapper bg='white'>
       <View style={styles.container}>
         <Header title="Tạo bài đăng" />
@@ -189,6 +258,13 @@ const NewPost = () => {
         />
 
       </View>
+      {checkingWithAI && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingBox}>
+            <Text style={styles.loadingText}>AI đang kiểm tra ảnh...</Text>
+          </View>
+        </View>
+      )}
     </ScreenWrapper>
   );
 };
@@ -274,6 +350,32 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     padding: 7,
     backgroundColor: 'rgba(255,0,0,0.6)'
-  }
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  loadingBox: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+  },
 
 });
