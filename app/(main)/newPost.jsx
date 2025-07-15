@@ -95,7 +95,19 @@ const NewPost = () => {
                 }
               },
               {
-                text: "Please analyze this image and respond only with one word: SAFE or UNSAFE. Is this image safe for public viewing (no nudity, violence, or sensitive content)?"
+                text: `
+      This image will be posted on a public, family-friendly social media platform. The platform strictly prohibits any of the following content:
+
+      - Sexual content (e.g. nudity, visible cleavage, lingerie, exposed buttocks or genitals, sexually suggestive poses)
+      - Violence (e.g. blood, gore, injuries, guns, knives, or scenes depicting physical harm)
+      - Shocking or disturbing content
+      - Hate symbols or offensive gestures
+      - Drug use or paraphernalia
+
+      Please analyze the image based on the above criteria and answer **with only one word**: SAFE or UNSAFE.
+
+      Do NOT explain anything. Just return either SAFE or UNSAFE.
+    `
               }
             ]
           }]
