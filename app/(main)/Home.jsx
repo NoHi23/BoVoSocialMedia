@@ -1,5 +1,6 @@
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import Icon from "../../assets/icons/index";
 import Avatar from "../../components/Avatar";
@@ -10,9 +11,9 @@ import { theme } from "../../constants/theme";
 import { useAuth } from "../../contexts/AuthContext";
 import { hp, wp } from "../../helpers/common";
 import { supabase } from "../../lib/supabase";
+import { fetchNotifications } from "../../services/notificationService";
 import { fetchPosts } from "../../services/postService";
 import { getUserData } from "../../services/userService";
-
 var limit = 0; // global variable to store the limit for posts
 const Home = () => {
   const { setAuth, user } = useAuth();
@@ -21,51 +22,134 @@ const Home = () => {
   const [notificationCount, setNotificationCount] = useState(0);
 
   const handlePostEvent = async (payload) => {
+    console.log('Post event received:', payload);
+    
     if (payload.eventType == "INSERT" && payload?.new?.id) {
       let newPost = { ...payload.new };
       let res = await getUserData(newPost?.userId);
       newPost.postLikes = [];
-      newPost.comments = [{ count: 0 }]
+      newPost.comments = [];
       newPost.user = res.success ? res.data : {};
-      setPosts((prevPosts) => [newPost, ...prevPosts]);
+      
+      setPosts((prevPosts) => {
+        // Check if post already exists to avoid duplicates
+        const existingPost = prevPosts.find(post => post.id === newPost.id);
+        if (existingPost) return prevPosts;
+        return [newPost, ...prevPosts];
+      });
     }
 
-    if (payload.eventType === 'DELETE' && payload.old.id) {
+    if (payload.eventType === 'DELETE' && payload.old?.id) {
       setPosts(prevPosts => {
-        let updatedPosts = prevPosts.filter(post => post.id != payload.old.id);
-        return updatedPosts;
-      })
+        return prevPosts.filter(post => post.id !== payload.old.id);
+      });
     }
+    
     if (payload.eventType == "UPDATE" && payload?.new?.id) {
       setPosts(prevPosts => {
-        let updatedPosts = prevPosts.map(post => {
+        return prevPosts.map(post => {
           if (post.id == payload.new.id) {
-            post.body = payload.new.body;
-            post.file = payload.new.file;
+            return {
+              ...post,
+              body: payload.new.body,
+              file: payload.new.file,
+              updated_at: payload.new.updated_at
+            };
           }
           return post;
         });
-        return updatedPosts;
-      })
+      });
     }
   };
   const [posts, setPosts] = useState([]);
 
+  const getNotificationCount = async () => {
+    if (!user?.id) return;
+    let res = await fetchNotifications(user.id);
+    if (res.success) {
+      // Count unread notifications (you might need to add an 'isRead' field to your notifications table)
+      // For now, we'll just count all notifications
+      setNotificationCount(res.data?.length || 0);
+    }
+  };
+
   const handleNewNotification = async (payload) => {
     console.log('got new notification: ', payload);
 
-    if (payload.eventType == 'INSERT' && payload.new.id) {
+    if (payload.eventType == 'INSERT' && payload.new && payload.new.id && payload.new.receiverId === user.id) {
       setNotificationCount(prev => prev + 1)
     }
-
   }
+
+  const handleCommentEvent = async (payload) => {
+    console.log('Home - Comment event received:', payload);
+    
+    if (payload.eventType == "INSERT" && payload?.new?.postId) {
+      // Get user data for the new comment
+      let newComment = { ...payload.new };
+      let res = await getUserData(newComment?.userId);
+      newComment.user = res.success ? res.data : {};
+      
+      console.log('Home - Adding comment to post ID:', payload.new.postId);
+      
+      // Add comment to the corresponding post
+      setPosts(prevPosts => {
+        console.log('Home - Current posts in callback:', prevPosts.length);
+        const updatedPosts = prevPosts.map(post => {
+          if (String(post.id) === String(payload.new.postId)) {
+            console.log(`Home - Found post ${post.id}, current comments: ${post.comments?.length || 0}`);
+            
+            // Check if comment already exists to avoid duplicates
+            const existingComment = post.comments?.find(comment => comment.id === newComment.id);
+            if (existingComment) {
+              console.log('Home - Comment already exists, skipping...');
+              return post;
+            }
+            
+            console.log('Home - Adding comment');
+            return {
+              ...post,
+              comments: [...(post.comments || []), newComment]
+            };
+          }
+          return post;
+        });
+        console.log('Home - Posts updated');
+        return updatedPosts;
+      });
+    }
+
+    if (payload.eventType === 'DELETE' && payload.old?.postId) {
+      console.log('Home - Removing comment from post ID:', payload.old.postId);
+      // Remove comment from the corresponding post
+      setPosts(prevPosts => {
+        return prevPosts.map(post => {
+          if (String(post.id) === String(payload.old.postId)) {
+            console.log(`Home - Found post ${post.id}, current comments: ${post.comments?.length || 0}, removing 1`);
+            return {
+              ...post,
+              comments: (post.comments || []).filter(comment => comment.id !== payload.old.id)
+            };
+          }
+          return post;
+        });
+      });
+    }
+  };
 
   useEffect(() => {
     if (!user?.id) return;
 
+    // Load initial data
+    getPosts();
+    getNotificationCount();
+
     let notificationChannel;
+    let postsChannel;
+    let commentsChannel;
 
     const subscribeRealtime = async () => {
+      // Subscribe to notifications
       notificationChannel = supabase
         .channel(`notifications-${user.id}`)
         .on(
@@ -74,15 +158,84 @@ const Home = () => {
             event: 'INSERT',
             schema: 'public',
             table: 'notifications',
+            filter: `receiverId=eq.${user.id}`,
           },
           handleNewNotification
         );
 
-      const { error } = await notificationChannel.subscribe();
-      if (error) {
-        console.log('Subscription error:', error);
+      // Subscribe to posts changes
+      postsChannel = supabase
+        .channel('posts')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'posts',
+          },
+          handlePostEvent
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'posts',
+          },
+          handlePostEvent
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'posts',
+          },
+          handlePostEvent
+        );
+
+      // Subscribe to comments changes
+      commentsChannel = supabase
+        .channel('home-comments')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'comments',
+          },
+          handleCommentEvent
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'comments',
+          },
+          handleCommentEvent
+        );
+
+      const { error: notificationError } = await notificationChannel.subscribe();
+      const { error: postsError } = await postsChannel.subscribe();
+      const { error: commentsError } = await commentsChannel.subscribe();
+      
+      if (commentsError) {
+        console.log('Comments subscription error:', commentsError);
+      } else {
+        console.log('✅ Subscribed to comments realtime successfully');
+      }
+      
+      if (notificationError) {
+        console.log('Notification subscription error:', notificationError);
       } else {
         console.log('✅ Subscribed to notifications realtime successfully');
+      }
+
+      if (postsError) {
+        console.log('Posts subscription error:', postsError);
+      } else {
+        console.log('✅ Subscribed to posts realtime successfully');
       }
     };
 
@@ -92,18 +245,37 @@ const Home = () => {
       if (notificationChannel) {
         supabase.removeChannel(notificationChannel);
       }
+      if (postsChannel) {
+        supabase.removeChannel(postsChannel);
+      }
+      if (commentsChannel) {
+        supabase.removeChannel(commentsChannel);
+      }
     };
   }, [user?.id]);
 
-  const getPosts = async () => {
-    if (!hasMore) return null;
-    limit = limit + 10;
+  const getPosts = async (isLoadingMore = false) => {
+    if (!hasMore && isLoadingMore) return null;
+    
+    // Only increment limit if we're loading more
+    if (isLoadingMore) {
+      limit = limit + 10;
+    } else if (posts.length === 0) {
+      limit = 10;
+    }
+    
     console.log("fetching post: ", limit);
     let res = await fetchPosts(limit);
     if (res.success) {
       console.log("Posts fetched successfully:", res.data.length);
-      if (posts.length === res.data.length) setHasMore(false);
-      setPosts(res.data);
+      if (posts.length === res.data.length && isLoadingMore) setHasMore(false);
+      
+      // Remove duplicates based on post ID
+      const uniquePosts = res.data.filter((post, index, self) => 
+        index === self.findIndex(p => p.id === post.id)
+      );
+      
+      setPosts(uniquePosts);
     } else {
       console.log("Failed to fetch posts:", res.msg);
     }
@@ -116,6 +288,17 @@ const Home = () => {
   //     Alert.alert("Logout", error.message);
   //   }
   // };
+  
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.id) {
+        console.log('Home - Screen focused, refreshing posts and notifications');
+        getPosts();
+        getNotificationCount();
+      }
+    }, [user?.id])
+  );
+
   return (
     <ScreenWrapper bg="white">
       <View style={styles.container}>
@@ -164,13 +347,13 @@ const Home = () => {
           data={posts}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listStyle}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item, index) => `post-${item.id}-${index}`}
           renderItem={({ item }) => (
             <PostCard item={item} currentUser={user} router={router} />
           )}
           onEndReached={() => {
             console.log("Go to the end");
-            getPosts();
+            getPosts(true);
           }}
           onEndReachedThreshold={0}
           ListFooterComponent={

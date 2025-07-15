@@ -24,7 +24,7 @@ const Profile = () => {
     setAuth(null);
     const { error } = await supabase.auth.signOut();
     if (error) {
-      Alert.alert("Logout", error.message);
+      Alert.alert("Đăng xuất", error.message);
     }
   };
 
@@ -44,14 +44,14 @@ const Profile = () => {
 
   const handleLogout = async () => {
     //
-    Alert.alert("Confirm", "Are you sure you want to logout?", [
+    Alert.alert("Xác nhận", "Bạn có chắc chắn muốn đăng xuất không?", [
       {
-        text: "Cancel",
+        text: "Hủy bỏ",
         onPress: () => console.log("modal cancelled"),
         style: "cancel",
       },
       {
-        text: "Logout",
+        text: "Đăng xuất",
         onPress: () => onLogout(),
         style: "destructive",
       },
@@ -82,7 +82,7 @@ const Profile = () => {
             </View>
           ) : (
             <View style={{ marginVertical: 30 }}>
-              <Text style={styles.noPosts}>No more post</Text>
+              <Text style={styles.noPosts}>Không còn bài đăng nào nữa</Text>
             </View>
           )
         }
@@ -96,7 +96,7 @@ const UserHeader = ({ user, router, handleLogout }) => {
       style={{ flex: 1, backgroundColor: "white", paddingHorizontal: wp(4) }}
     >
       <View>
-        <Header title="Profile" mb={30} />
+        <Header title="Hồ sơ cá nhân" mb={30} />
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Icon name="logout" color={theme.colors.rose} />
         </TouchableOpacity>

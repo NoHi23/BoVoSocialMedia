@@ -23,7 +23,7 @@ const SignUp = () => {
         const email = emailRef.current.trim();
         const password = passwordRef.current.trim();
         if (!name || !email || !password) {
-            Alert.alert('Sign Up', 'Please fill all fields');
+            Alert.alert('Đăng ký', 'Vui lòng điền vào tất cả các trường thông tin');
             return;
         }
         setLoading(true);
@@ -39,7 +39,7 @@ const SignUp = () => {
         console.log('session', session);
         console.log('error', error);
         if (error) {
-            Alert.alert('Sign Up', error.message);
+            Alert.alert('Đăng nhập', error.message);
         }
     }
     return (
@@ -50,34 +50,34 @@ const SignUp = () => {
 
                 {/* welcome  */}
                 <View>
-                    <Text style={styles.welcomeText}>Let's </Text>
-                    <Text style={styles.welcomeText}>Get Started</Text>
+                    <Text style={styles.welcomeText}>Được rồi... </Text>
+                    <Text style={styles.welcomeText}>Hãy bắt đầu thôi</Text>
                 </View>
 
                 {/* form  */}
                 <View style={styles.form}>
                     <Text style={{ fontSize: hp(1.5), color: theme.colors.text }}>
-                        Please enter your details to continue
+                        Vui lòng nhập thông tin của bạn để tiếp tục
                     </Text>
                     <Input icon={<Icon name='user' size={26} strokeWidth={1.6} />}
-                        placeholder='Enter your name' onChangeText={value => { nameRef.current = value }} />
+                        placeholder='Nhập tên của bạn' onChangeText={value => { nameRef.current = value }} />
                     <Input icon={<Icon name='mail' size={26} strokeWidth={1.6} />}
-                        placeholder='Enter your email' onChangeText={value => { emailRef.current = value }} />
+                        placeholder='Nhập địa chỉ email của bạn' onChangeText={value => { emailRef.current = value }} />
                     <Input icon={<Icon name='lock' size={26} strokeWidth={1.6} />}
-                        placeholder='Enter your password' onChangeText={value => { passwordRef.current = value }}
+                        placeholder='Nhập mật khẩu của bạn' onChangeText={value => { passwordRef.current = value }}
                         secureTextEntry />
                     {/* button  */}
-                    <Button title={'Sign up'} loading={loading} onPress={onSubmit} />
+                    <Button title={'Đăng ký'} loading={loading} onPress={onSubmit} />
                 </View>
 
                 {/* footer  */}
                 <View style={styles.footer}>
                     <Text style={styles.footerText}>
-                        Already have an account?
+                        Bạn đã có tài khoản?
                     </Text>
                     <Pressable onPress={() => router.push('Login')}>
                         <Text style={[styles.footerText, { color: theme.colors.primaryDark, fontWeight: theme.fonts.semibold }]}>
-                            Login
+                            Đăng nhập
                         </Text>
                     </Pressable>
                 </View>

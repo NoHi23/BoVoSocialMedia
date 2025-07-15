@@ -60,7 +60,7 @@ const EditProfile = () => {
         let userData = { ...user };
         let { name, phoneNumber, address, image, bio } = userData;
         if (!name || !phoneNumber || !address || !bio || !image) {
-            Alert.alert('Profile', "Please fill all the fields");
+            Alert.alert('Hồ sơ cá nhân', "Vui lòng điền vào tất cả các trường thông tin");
             return;
         }
         setLoading(true);
@@ -87,7 +87,7 @@ const EditProfile = () => {
         <ScreenWrapper bg="white">
             <View style={styles.container}>
                 <ScrollView style={{ flex: 1 }}>
-                    <Header title="Edit Profile" />
+                    <Header title="Chỉnh sửa hồ sơ" />
 
                     {/* form */}
                     <View style={styles.form}>
@@ -98,35 +98,35 @@ const EditProfile = () => {
                             </Pressable>
                         </View>
                         <Text style={{ fontSize: hp(1.5), color: theme.colors.text }}>
-                            Please fill your profile details
+                            Vui lòng điền thông tin hồ sơ của bạn
                         </Text>
                         <Input
                             icon={<Icon name="user" />}
-                            placeholder='Enter your name'
+                            placeholder='Nhập tên của bạn'
                             value={user.name}
                             onChangeText={value => setUser({ ...user, name: value })}
                         />
                         <Input
                             icon={<Icon name="call" />}
-                            placeholder='Enter your phone number'
+                            placeholder='Nhập số điện thoại của bạn'
                             value={user.phoneNumber}
                             onChangeText={value => setUser({ ...user, phoneNumber: value })}
                         />
                         <Input
                             icon={<Icon name="location" />}
-                            placeholder='Enter your address'
+                            placeholder='Nhập địa chỉ của bạn'
                             value={user.address}
                             onChangeText={value => setUser({ ...user, address: value })}
                         />
                         <Input
-                            placeholder='Enter your bio'
+                            placeholder='Nhập bio của bạn'
                             value={user.bio}
                             multiline={true}
                             containerStyle={styles.bio}
                             onChangeText={value => setUser({ ...user, bio: value })}
                         />
 
-                        <Button title="Update" loading={loading} onPress={onSubmit} />
+                        <Button title="Cập nhật" loading={loading} onPress={onSubmit} />
                     </View>
                 </ScrollView>
             </View>

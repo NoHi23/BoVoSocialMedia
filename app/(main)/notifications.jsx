@@ -24,7 +24,7 @@ const Notifications = () => {
   return (
     <ScreenWrapper >
       <View style={styles.container}>
-        <Header title="Notifications"/>
+        <Header title="Thông báo"/>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listStyle}>
           {
             notifications.map(item => {
@@ -39,7 +39,7 @@ const Notifications = () => {
           }
           {
             notifications.length == 0 && (
-              <Text style={styles.noData}>No notification yet</Text>
+              <Text style={styles.noData}>Chưa có thông báo nào</Text>
             )
           }
 

@@ -95,7 +95,10 @@ const NewPost = () => {
 
   const onSubmit = async () => {
     if (!bodyRef.current && !file) {
-      Alert.alert("Post", "Please choose an image or add post body");
+      Alert.alert(
+        "Post",
+        "Vui lòng chọn một hình ảnh hoặc thêm nội dung bài viết"
+      );
       return;
     }
 
@@ -127,7 +130,7 @@ const NewPost = () => {
   return (
     <ScreenWrapper bg="white">
       <View style={styles.container}>
-        <Header title="Create Post" />
+        <Header title="Tạo bài đăng" />
         <ScrollView contentContainerStyle={{ gap: 20 }}>
           <View style={styles.header}>
             <Avatar
@@ -137,7 +140,7 @@ const NewPost = () => {
             />
             <View style={{ gap: 2 }}>
               <Text style={styles.username}>{user && user.name}</Text>
-              <Text style={styles.publicText}>Public</Text>
+              <Text style={styles.publicText}>Công khai</Text>
             </View>
           </View>
 
@@ -173,7 +176,7 @@ const NewPost = () => {
           )}
 
           <View style={styles.media}>
-            <Text style={styles.addImageText}>Add to your post</Text>
+            <Text style={styles.addImageText}>Thêm vào bài viết của bạn</Text>
             <View style={styles.mediaIcons}>
               <TouchableOpacity onPress={() => onPick(true)}>
                 <Icon name="image" size={30} color={theme.colors.dark} />
@@ -186,7 +189,7 @@ const NewPost = () => {
         </ScrollView>
         <Button
           buttonStyle={{ height: hp(6.2) }}
-          title={post && post.id ? "Update" : "Post"}
+          title={post && post.id ? "Cập nhật" : "Tải lên"}
           loading={loading}
           hasShadow={false}
           onPress={onSubmit}
