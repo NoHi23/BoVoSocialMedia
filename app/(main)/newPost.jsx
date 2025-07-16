@@ -3,7 +3,7 @@ import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from "react-native";
 import Icon from "../../assets/icons";
 import Avatar from '../../components/Avatar';
 import Button from '../../components/Button';
@@ -245,91 +245,99 @@ Chỉ trả về phần caption bằng tiếng Việt. Không giải thích gì 
   return (
 
     <ScreenWrapper bg='white'>
-      <View style={styles.container}>
-        <Header title="Tạo bài đăng" />
-        <ScrollView contentContainerStyle={{ gap: 20 }}>
-          <View style={styles.header}>
-            <Avatar
-              uri={user?.image}
-              size={hp(6.5)}
-              rounded={theme.radius.xl}
-            />
-            <View style={{ gap: 2 }}>
-              <Text style={styles.username}>
-                {user && user.name}
-              </Text>
-              <Text style={styles.publicText}>
-                Công khai
-              </Text>
-            </View>
-          </View>
-
-
-          <View style={styles.textEditor}>
-            <RichTextEditor editorRef={editorRef} onChange={body => bodyRef.current = body} />
-          </View>
-          {file && getFileType(file) === 'image' && (
-            <TouchableOpacity
-              style={{
-                backgroundColor: theme.colors.primary,
-                paddingVertical: 10,
-                borderRadius: 8,
-                marginTop: 10,
-                alignItems: 'center'
-              }}
-              onPress={generateDescriptionWithAI}
-            >
-              <Text style={{ color: 'white', fontWeight: 'bold' }}>
-                Tạo mô tả bằng AI
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {
-            file && (
-              <View style={styles.file}>
-                {
-                  getFileType(file) == 'video' ? (
-                    <Video
-                      style={{ flex: 1 }}
-                      source={{ uri: getFileUri(file) }}
-                      useNativeControls
-                      resizeMode="cover"
-                      isLooping
-                    />
-                  ) : (
-                    <Image source={{ uri: getFileUri(file) }} resizeMode="cover" style={{ flex: 1 }} />
-                  )
-                }
-
-                <Pressable style={styles.closeIcon} onPress={() => setFile(null)}>
-                  <Icon name="delete" size={20} color="white" />
-                </Pressable>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.container}>
+            <Header title="Tạo bài đăng" />
+            <ScrollView contentContainerStyle={{ gap: 20 }}>
+              <View style={styles.header}>
+                <Avatar
+                  uri={user?.image}
+                  size={hp(6.5)}
+                  rounded={theme.radius.xl}
+                />
+                <View style={{ gap: 2 }}>
+                  <Text style={styles.username}>
+                    {user && user.name}
+                  </Text>
+                  <Text style={styles.publicText}>
+                    Công khai
+                  </Text>
+                </View>
               </View>
-            )
-          }
 
-          <View style={styles.media}>
-            <Text style={styles.addImageText}>Thêm vào bài viết của bạn</Text>
-            <View style={styles.mediaIcons}>
-              <TouchableOpacity onPress={() => onPick(true)}>
-                <Icon name="image" size={30} color={theme.colors.dark} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => onPick(false)}>
-                <Icon name="video" size={33} color={theme.colors.dark} />
-              </TouchableOpacity>
-            </View>
+
+              <View style={styles.textEditor}>
+                <RichTextEditor editorRef={editorRef} onChange={body => bodyRef.current = body} />
+              </View>
+              {file && getFileType(file) === 'image' && (
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: theme.colors.primary,
+                    paddingVertical: 10,
+                    borderRadius: 8,
+                    marginTop: 10,
+                    alignItems: 'center'
+                  }}
+                  onPress={generateDescriptionWithAI}
+                >
+                  <Text style={{ color: 'white', fontWeight: 'bold' }}>
+                    Tạo mô tả bằng AI
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {
+                file && (
+                  <View style={styles.file}>
+                    {
+                      getFileType(file) == 'video' ? (
+                        <Video
+                          style={{ flex: 1 }}
+                          source={{ uri: getFileUri(file) }}
+                          useNativeControls
+                          resizeMode="cover"
+                          isLooping
+                        />
+                      ) : (
+                        <Image source={{ uri: getFileUri(file) }} resizeMode="cover" style={{ flex: 1 }} />
+                      )
+                    }
+
+                    <Pressable style={styles.closeIcon} onPress={() => setFile(null)}>
+                      <Icon name="delete" size={20} color="white" />
+                    </Pressable>
+                  </View>
+                )
+              }
+
+              <View style={styles.media}>
+                <Text style={styles.addImageText}>Thêm vào bài viết của bạn</Text>
+                <View style={styles.mediaIcons}>
+                  <TouchableOpacity onPress={() => onPick(true)}>
+                    <Icon name="image" size={30} color={theme.colors.dark} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => onPick(false)}>
+                    <Icon name="video" size={33} color={theme.colors.dark} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+            <Button
+              buttonStyle={{ height: hp(6.2) }}
+              title={post && post.id ? "Cập nhật" : "Tải lên"}
+              loading={loading}
+              hasShadow={false}
+              onPress={onSubmit}
+            />
+
           </View>
-        </ScrollView>
-        <Button
-          buttonStyle={{ height: hp(6.2) }}
-          title={post && post.id ? "Cập nhật" : "Tải lên"}
-          loading={loading}
-          hasShadow={false}
-          onPress={onSubmit}
-        />
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
 
-      </View>
       {checkingWithAI && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingBox}>
